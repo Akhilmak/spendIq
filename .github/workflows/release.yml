@@ -1,0 +1,57 @@
+name: Build & Release SpendIQ APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: 🏗 Checkout
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: 📦 Install Dependencies
+        run: npm install
+
+      - name: 🚀 Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 🔨 Build APK
+        run: npx eas build --platform android --profile preview --non-interactive --local --output=spendiq.apk
+
+      - name: 📦 Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: spendiq.apk
+          name: SpendIQ Release ${{ github.ref_name }}
+          body: |
+            ## SpendIQ v${{ github.ref_name }}
+            
+            Download the latest SpendIQ Android app below.
+            
+            ### ✨ Features
+            - Liquid Glass UI System
+            - Automated SMS Finance Tracking
+            - Dynamic Analytics Dashboard
+            - Enhanced Dark/Light Theme Support
+            
+            ---
+            *Built automatically by GitHub Actions.*
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
